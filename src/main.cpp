@@ -13,7 +13,11 @@ RTC_DS3231 rtc;
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &WIRE);
 
-int i = 1;
+int New_Day = 1;
+int New_Month = 1;
+int New_Year = 2023;
+int New_Hour = 0;
+int New_Minute = 1;
 bool Done = false;
 char Week_Day[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 int Alarm1[2] = {6, 0};
@@ -38,20 +42,120 @@ void Set_Time() {
     display.setTextSize(2);
     display.print("Day?");
     display.setCursor(0, 24);
-    display.print(i);
+    display.print(New_Day);
     display.display();
     if(digitalRead(BUTTON_B) == LOW){
-      if (i >= 31){i = 1;}
-      else{i++;}
+      if (New_Day >= 31){New_Day = 1;}
+      else{New_Day++;}
     }
-    // else if (digitalRead(BUTTON_A) == LOW)
-    // {
-    //   rtc.adjust(DateTime(now.year(), now.month, i, F(__TIME__)));
-    //   Done = true;
-    // }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+  delay(100);
+  }
+  delay(1000);
+  Done = false;
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Month?");
+    display.setCursor(0, 24);
+    display.print(New_Month);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (New_Month >= 12){New_Month = 1;}
+      else{New_Month++;}
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+  delay(100);
+  }
+  delay(1000);
+  Done = false;
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Year?");
+    display.setCursor(0, 24);
+    display.print(New_Year);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (New_Year >= 2199){New_Year = 2023;}
+      else{New_Year++;}
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+  delay(100);
+  }
+  delay(1000);
+  Done = false;
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Year?");
+    display.setCursor(0, 24);
+    display.print(New_Year);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (New_Year >= 2199){New_Year = 2023;}
+      else{New_Year++;}
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+  delay(100);
+  }
+  delay(1000);
+  Done = false;
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Hour?");
+    display.setCursor(0, 24);
+    display.print(New_Hour);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (New_Hour >= 23){New_Hour = 0;}
+      else{New_Hour++;}
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+  delay(100);
+  }
+  delay(1000);
+  Done = false;
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Minute?");
+    display.setCursor(0, 24);
+    display.print(New_Minute);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (New_Minute >= 59){New_Minute = 0;}
+      else{New_Minute++;}
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
   delay(100);
   }
   Done = false;
+  rtc.adjust(DateTime(New_Year, New_Month, New_Day, New_Hour, New_Minute, 0));
 }
 
 void Set_Alarm(int x){
