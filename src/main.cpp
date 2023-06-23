@@ -1,23 +1,21 @@
 #include <Wire.h>
 #include <SPI.h>
-#include <string>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "RTClib.h"
 
-#define BUTTON_A 15
-#define BUTTON_B 32
+RTC_DS3231 rtc;
+
+#define BUTTON_A 16
+#define BUTTON_B 15
 #define BUTTON_C 14
 #define WIRE Wire
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &WIRE);
 
-int Time_Year = 23;
-int Time_Month = 1;
-int Time_Day = 1;
-int Time_Hour = 0;
-int Time_Minute = 0;
-int Time_Second = 0;
-String Week_Day[7] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+int i = 1;
+bool Done = false;
+char Week_Day[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 int Alarm1[2] = {6, 0};
 int Alarm2[2] = {6, 0};
 int Alarm3[2] = {6, 0};
@@ -28,7 +26,32 @@ bool Alarm3ON = true;
 bool Alarm4ON = true;
 
 void Set_Time() {
-
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(2);
+  display.print("Day?");
+  display.display();
+  delay(1000);
+  while(Done == false){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("Day?");
+    display.setCursor(0, 24);
+    display.print(i);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (i >= 31){i = 1;}
+      else{i++;}
+    }
+    // else if (digitalRead(BUTTON_A) == LOW)
+    // {
+    //   rtc.adjust(DateTime(now.year(), now.month, i, F(__TIME__)));
+    //   Done = true;
+    // }
+  delay(100);
+  }
+  Done = false;
 }
 
 void Set_Alarm(int x){
@@ -36,27 +59,43 @@ void Set_Alarm(int x){
 }
 
 void setup() {
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  
-  display.clearDisplay();
 
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
+  if (! rtc.begin()) {
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("RTC FAILED");
+    display.display();
+  }
+
+  rtc.adjust(DateTime(__DATE__, __TIME__));
+  display.clearDisplay();
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
   display.setTextSize(2);
 
+  pinMode(BUTTON_A, INPUT_PULLUP);
+  pinMode(BUTTON_B, INPUT_PULLUP);
+  pinMode(BUTTON_C, INPUT_PULLUP);
 }
 
 void loop() {
+  DateTime now = rtc.now();
+  
   display.clearDisplay();
   delay(1000);
   display.setCursor(0, 0);
   display.setTextSize(2);
 
-  // Loading Display
-  display.print(Week_Day[1]); display.print(" ");
-  display.print(Time_Day); display.print("-"); display.print(Time_Month); display.print("-"); display.println(Time_Year);
+  // Main Display
+  display.print(Week_Day[now.dayOfTheWeek()]); display.setCursor(42, 0);
+  display.print(now.day()); display.setTextSize(1); display.print("/"); display.setTextSize(2); display.print(now.month()); display.setTextSize(1); display.print("/"); display.setTextSize(2); display.println(now.year()-2000);
   display.setCursor(0, 24);
-  display.print(Time_Hour); display.print(":"); display.print(Time_Minute); display.print(":"); display.println(Time_Second);
+  display.print(now.hour()); display.print(":"); display.print(now.minute()); display.print(":"); display.print(now.second()); display.setTextSize(1); display.print(" "); display.print(int(rtc.getTemperature())); display.print(" C");
+  
   // Alarm ON/OFF display
   display.setTextSize(1);
   if (Alarm1ON == true) {
@@ -81,106 +120,14 @@ void loop() {
   display.setCursor(100, 54);
   display.print("AL4");
 
-  Time_Second++;
-  if (Time_Second == 60){
-  Time_Second = 0;
-  Time_Minute++;
+  if(digitalRead(BUTTON_A) == LOW){
+    Set_Time();
   }
-  if (Time_Minute == 60){
-    Time_Minute = 0;
-    Time_Hour++;
-  }
-  if (Time_Hour == 24){
-    Time_Hour = 0;
-    Time_Day++;
-  }
-  // Handles Leap Year Feb
-  if (Time_Year % 4 == 0 && Time_Month == 2){
-    if (Time_Day == 30){
-      Time_Day = 1;
-      Time_Month++;
-    }
-  }
-  else {
-    switch (Time_Month)
-    {
-    case 1:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 2:
-      if (Time_Day == 29){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 3:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 4:
-      if (Time_Day == 31){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 5:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 6:
-      if (Time_Day == 31){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 7:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 8:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 9:
-      if (Time_Day == 31){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 10:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 11:
-      if (Time_Day == 31){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    case 12:
-      if (Time_Day == 32){
-        Time_Day = 1;
-        Time_Month++;
-      }
-      break;
-    }
-  }
-  if (Time_Month == 13){
-    Time_Month = 1;
-    Time_Year++;
+  if(digitalRead(BUTTON_B) == LOW){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.print("BUTTON B");
   }
 
   display.display();
