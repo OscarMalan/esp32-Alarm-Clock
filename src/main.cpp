@@ -9,7 +9,8 @@ RTC_DS3231 rtc;
 #define BUTTON_A 16
 #define BUTTON_B 15
 #define BUTTON_C 14
-#define Buzzer 17 
+#define Buzzer 17
+
 #define WIRE Wire
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &WIRE);
@@ -19,6 +20,7 @@ int New_Month = 1;
 int New_Year = 2023;
 int New_Hour = 0;
 int New_Minute = 1;
+int Count = 0;
 bool Done = false;
 char Week_Day[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
 int Alarm = 1;
@@ -32,10 +34,93 @@ bool Alarm3ON = false;
 bool Alarm4ON = false;
 
 
+void Variable_Value_Control(int &Changed_Varible, int Max_Value, int Min_Value, /* Handles text output on display, can't just parse the string as a paramenter due to how C++ handles strings */ int Text){
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    // The best way I could figure out on how to handle this text, still more effiecent by 10 lines
+    switch (Text)
+    {
+    case 0:
+      display.print("Day");
+      break;
+    case 1:
+      display.print("Month");
+      break;
+    case 2:
+      display.print("Year");
+      break;
+    case 3:
+      display.print("Hour");
+      break;
+    case 4:
+      display.print("Minute");
+      break;
+    case 5:
+      display.print("Alarm");
+      break;
+    case 6:
+      display.print("Al1 Hour");
+      break;
+    case 7:
+      display.print("Al1 Minute");
+      break;
+    case 8:
+      display.print("Al2 Hour");
+      break;
+    case 9:
+      display.print("Al2 Minute");
+      break;
+    case 10:
+      display.print("Al3 Hour");
+      break;
+    case 11:
+      display.print("Al3 Minute");
+      break;
+    case 12:
+      display.print("Al4 Hour");
+      break;
+    case 13:
+      display.print("Al4 Minute");
+      break;
+    }
+    display.setCursor(0, 24);
+    display.print(Changed_Varible);
+    display.display();
+    if(digitalRead(BUTTON_B) == LOW){
+      if (Changed_Varible >= Max_Value){Changed_Varible = Min_Value; }
+      // Count is used as a scaling, so that the longer the button is held down for, the larger the counting incremints
+      else{if (Count >= 5) {Changed_Varible += 2;}
+      else if (Count >= 10) {Changed_Varible += 5;}
+      else if (Count >= 15) {Changed_Varible += 8;}
+      else {Changed_Varible++;}
+      }
+      Count++;
+    delay(100);
+    }
+    else if(digitalRead(BUTTON_C) == LOW){
+      if (Changed_Varible <= Min_Value){Changed_Varible = Max_Value;}
+      else{if (Count >= 5) {Changed_Varible -= 2;}
+      else if (Count >= 10) {Changed_Varible -= 5;}
+      else if (Count >= 15) {Changed_Varible -= 8;}
+      else {Changed_Varible--;}
+      }
+      Count++;
+    delay(100);
+    }
+    else if (digitalRead(BUTTON_A) == LOW)
+    {
+      Done = true;
+    }
+    else {Count = 0;}
+}
+
 void setup() {
 
+  // Turns on display
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
+  // Tests RTC is working, tells user if it is failing
   if (! rtc.begin()) {
     display.clearDisplay();
     display.setTextColor(WHITE);
@@ -68,129 +153,30 @@ void Set_Time() {
   display.display();
   delay(1000);
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Day?");
-    display.setCursor(0, 24);
-    display.print(New_Day);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (New_Day >= 31){New_Day = 1;}
-      else{New_Day++;}
-    delay(100);
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (New_Day <= 1){New_Day = 31;}
-      else{New_Day--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
+    Variable_Value_Control(New_Day, 31, 1, 0);
   }
   delay(1000);
   Done = false;
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Month?");
-    display.setCursor(0, 24);
-    display.print(New_Month);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (New_Month >= 12){New_Month = 1;}
-      else{New_Month++;}
-  delay(100);
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (New_Month <= 1){New_Month = 12;}
-      else{New_Month--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
+    Variable_Value_Control(New_Month, 12, 1, 1);
   }
   delay(1000);
   Done = false;
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Year?");
-    display.setCursor(0, 24);
-    display.print(New_Year);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (New_Year >= 2039){New_Year = 2023;}
-      else{New_Year++;}
-  delay(100);
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (New_Year <= 2023){New_Year = 2039;}
-      else{New_Year--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
+    Variable_Value_Control(New_Year, 2039, 2023, 2);
   }
   delay(1000);
   Done = false;
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Hour?");
-    display.setCursor(0, 24);
-    display.print(New_Hour);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (New_Hour >= 23){New_Hour = 0;}
-      else{New_Hour++;}
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (New_Hour <= 0){New_Hour = 23;}
-      else{New_Hour--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
-  delay(100);
+    Variable_Value_Control(New_Hour, 23, 0, 3);
   }
   delay(1000);
   Done = false;
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Minute?");
-    display.setCursor(0, 24);
-    display.print(New_Minute);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (New_Minute >= 59){New_Minute = 0;}
-      else{New_Minute++;}
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (New_Minute <= 0){New_Minute = 59;}
-      else{New_Minute--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
-  delay(100);
+    Variable_Value_Control(New_Minute, 59, 0, 4);
   }
   Done = false;
+  // Adjust the RTC time
   rtc.adjust(DateTime(New_Year, New_Month, New_Day, New_Hour, New_Minute, 0));
 }
 
@@ -203,27 +189,7 @@ void Set_Alarm(){
   display.display();
   delay(1000);
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Alarm?");
-    display.setCursor(0, 24);
-    display.print(Alarm);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (Alarm >= 4){Alarm = 1;}
-      else{Alarm++;}
-    delay(100);
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm <= 1){Alarm = 4;}
-      else{Alarm--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
+    Variable_Value_Control(Alarm, 4, 1, 5);
   }
   Done = false;
   display.clearDisplay();
@@ -233,108 +199,27 @@ void Set_Alarm(){
   case 1:
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al1 Hour");
-      display.setCursor(0, 24);
-      display.print(Alarm1[0]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm1[0] >= 23){Alarm1[0] = 0;}
-        else{Alarm1[0]++;}
-      delay(100);
-      }
-      else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm1[0] <= 0){Alarm1[0] = 23;}
-      else{Alarm1[0]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm1[0], 23, 0, 6);
     }
     Done = false;
     delay(1000);
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al1 Minute");
-      display.setCursor(0, 24);
-      display.print(Alarm1[1]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm1[1] >= 59){Alarm1[1] = 0;}
-        else{Alarm1[1]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm1[1] <= 0){Alarm1[1] = 59;}
-      else{Alarm1[1]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm1[1], 59, 0, 7);
     }
     Done = false;
     delay(1000);
     break;
-  
   case 2:
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al2 Hour");
-      display.setCursor(0, 24);
-      display.print(Alarm2[0]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm2[0] >= 23){Alarm2[0] = 0;}
-        else{Alarm2[0]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm2[0] <= 0){Alarm2[0] = 23;}
-      else{Alarm2[0]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm2[0], 23, 0, 8);
     }
     Done = false;
     delay(1000);
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al2 Minute");
-      display.setCursor(0, 24);
-      display.print(Alarm2[1]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm2[1] >= 59){Alarm2[1] = 0;}
-        else{Alarm2[1]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm2[1] <= 0){Alarm2[1] = 59;}
-      else{Alarm2[1]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm2[1], 59, 0, 9);
     }
     Done = false;
     delay(1000);
@@ -342,53 +227,13 @@ void Set_Alarm(){
   case 3:
    while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al3 Hour");
-      display.setCursor(0, 24);
-      display.print(Alarm3[0]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm3[0] >= 23){Alarm3[0] = 0;}
-        else{Alarm3[0]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm3[0] <= 0){Alarm3[0] = 23;}
-      else{Alarm3[0]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm3[0], 23, 0, 10);
     }
     Done = false;
     delay(1000);
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al3 Minute");
-      display.setCursor(0, 24);
-      display.print(Alarm3[1]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm3[1] >= 59){Alarm3[1] = 0;}
-        else{Alarm3[1]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm3[1] <= 0){Alarm3[1] = 59;}
-      else{Alarm3[1]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm3[1], 59, 0, 11);
     }
     Done = false;
     delay(1000);
@@ -396,53 +241,13 @@ void Set_Alarm(){
   case 4:
    while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al4 Hour");
-      display.setCursor(0, 24);
-      display.print(Alarm4[0]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm4[0] >= 23){Alarm4[0] = 0;}
-        else{Alarm4[0]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm4[0] <= 0){Alarm4[0] = 23;}
-      else{Alarm4[0]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm4[0], 23, 0, 12);
     }
     Done = false;
     delay(1000);
     while (Done == false)
     {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("Al4 Minute");
-      display.setCursor(0, 24);
-      display.print(Alarm4[1]);
-      display.display();
-      if(digitalRead(BUTTON_B) == LOW){
-        if (Alarm4[1] >= 59){Alarm4[1] = 0;}
-        else{Alarm4[1]++;}
-      delay(100);
-      }
-        else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm4[1] <= 0){Alarm4[1] = 59;}
-      else{Alarm4[1]--;}
-      delay(100);
-    }
-      else if (digitalRead(BUTTON_A) == LOW)
-      {
-        Done = true;
-      }
+      Variable_Value_Control(Alarm4[1], 59, 0, 13);
     }
     Done = false;
     delay(1000);
@@ -467,27 +272,7 @@ void Control_Alarm(){
   display.display();
   delay(1000);
   while(Done == false){
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
-    display.print("Alarm?");
-    display.setCursor(0, 24);
-    display.print(Alarm);
-    display.display();
-    if(digitalRead(BUTTON_B) == LOW){
-      if (Alarm >= 4){Alarm = 1;}
-      else{Alarm++;}
-    delay(100);
-    }
-    else if(digitalRead(BUTTON_C) == LOW){
-      if (Alarm <= 1){Alarm = 4;}
-      else{Alarm--;}
-    delay(100);
-    }
-    else if (digitalRead(BUTTON_A) == LOW)
-    {
-      Done = true;
-    }
+    Variable_Value_Control(Alarm, 4, 1, 5);
   }
   Done = false;
   switch (Alarm)
