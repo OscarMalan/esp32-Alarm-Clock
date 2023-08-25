@@ -12,8 +12,6 @@ RTC_DS3231 rtc;
 #define BUTTON_C 12
 #define Buzzer 17
 
-RTC_DATA_ATTR int bootCount = 0;
-
 #define WIRE Wire
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &WIRE);
@@ -77,7 +75,8 @@ void Variable_Value_Control(int &Changed_Varible, int Max_Value, int Min_Value, 
     }
     else {Count = 0;}
   }
-  Done = false; 
+  Done = false;
+  delay(2000);
 }
 
 
@@ -87,19 +86,14 @@ void Set_Time() {
   display.setTextSize(2);
   display.print("Set Time");
   display.display();
-  delay(1000);
+  delay(2000);
   Variable_Value_Control(New_Day, 31, 1, 0);
-  delay(1000);
   Variable_Value_Control(New_Month, 12, 1, 1);
-  delay(1000);
   Variable_Value_Control(New_Year, 2039, 2023, 2);
-  delay(1000);
   Variable_Value_Control(New_Hour, 23, 0, 3);
-  delay(1000);
   Variable_Value_Control(New_Minute, 59, 0, 4);
   // Adjust the RTC time
   rtc.adjust(DateTime(New_Year, New_Month, New_Day, New_Hour, New_Minute, 0));
-  delay(1000);
 }
 
 void Set_Alarm(){
@@ -109,10 +103,9 @@ void Set_Alarm(){
   display.setTextSize(2);
   display.print("Set Alarm");
   display.display();
-  delay(1000);
+  delay(2000);
   Variable_Value_Control(Alarm, 4, 1, 5);
   display.clearDisplay();
-  delay(1000);
   switch (Alarm)
   {
   case 1:
@@ -137,9 +130,9 @@ void Set_Alarm(){
     display.setTextSize(2);
     display.print("ERROR");
     display.display();
+    delay(10000);
     break;
   }
-  delay(1000);
 }
 
 void Control_Alarm(){
@@ -149,7 +142,7 @@ void Control_Alarm(){
   display.setTextSize(2);
   display.print("ON/OFF Al");
   display.display();
-  delay(1000);
+  delay(2000);
   Variable_Value_Control(Alarm, 4, 1, 5);
   switch (Alarm)
   {
@@ -207,8 +200,8 @@ void setup() {
   esp_sleep_enable_timer_wakeup(59999999);
   // Will wake up esp32 from sleep when any of the buttons are pressed
   esp_sleep_enable_ext1_wakeup(0x000000010,ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_sleep_enable_ext1_wakeup(0x000008000,ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_sleep_enable_ext1_wakeup(0x000001000,ESP_EXT1_WAKEUP_ANY_HIGH);
+  // esp_sleep_enable_ext1_wakeup(0x000008000,ESP_EXT1_WAKEUP_ANY_HIGH);
+  // esp_sleep_enable_ext1_wakeup(0x000001000,ESP_EXT1_WAKEUP_ANY_HIGH);
 }
 
 void loop() {
@@ -248,15 +241,6 @@ void loop() {
   display.setCursor(100, 54);
   display.print("AL4");
 
-  if(digitalRead(BUTTON_A) == HIGH){
-    Set_Time();
-  }
-  if(digitalRead(BUTTON_B) == HIGH){
-    Set_Alarm();
-  }
-  if(digitalRead(BUTTON_C) == HIGH){
-    Control_Alarm();
-  }
 
   if(now.second() == 0){
     if(now.hour() == Alarm1[0]){
@@ -289,6 +273,19 @@ void loop() {
     }
   }
   display.display();
+
+  if(digitalRead(BUTTON_A) == HIGH){
+    Set_Time();
+  }
+  if(digitalRead(BUTTON_B) == HIGH){
+    Set_Alarm();
+  }
+  if(digitalRead(BUTTON_C) == HIGH){
+    Control_Alarm();
+  }
+  else{
   // Send ESP32 into deep sleep
   esp_deep_sleep_start();
+  }
+
 }
